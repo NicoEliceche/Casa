@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#071012" />
+    <title>Casa 10x10 - To-do list</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #071012;
+        --panel: rgba(12, 20, 23, 0.72);
+        --panel-strong: rgba(12, 20, 23, 0.9);
+        --line: rgba(192, 243, 241, 0.14);
+        --text: #eef8f7;
+        --muted: #9ab2b1;
+        --soft: rgba(238, 248, 247, 0.68);
+        --accent: #1ee6d6;
+        --accent-strong: #71fff2;
+        --danger: #ff7a7a;
+        --amber: #e8b65c;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+        --radius: 8px;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background: var(--bg);
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        overflow-x: hidden;
+      }
+
+      body::before {
+        position: fixed;
+        inset: -24px;
+        z-index: -2;
+        content: "";
+        background:
+          linear-gradient(180deg, rgba(7, 16, 18, 0.12), rgba(7, 16, 18, 0.96)),
+          url("assets/background.png") center / cover no-repeat;
+        filter: blur(5px) saturate(1.08);
+        transform: scale(1.04);
+      }
+
+      body::after {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        content: "";
+        background:
+          radial-gradient(circle at 18% 6%, rgba(30, 230, 214, 0.18), transparent 30%),
+          radial-gradient(circle at 92% 28%, rgba(232, 182, 92, 0.12), transparent 26%),
+          linear-gradient(180deg, rgba(7, 16, 18, 0.16), rgba(7, 16, 18, 0.78));
+        pointer-events: none;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        color: inherit;
+      }
+
+      .app {
+        width: min(100%, 760px);
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+      }
+
+      .top {
+        padding: 18px 2px 12px;
+      }
+
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 30px;
+        padding: 0 10px;
+        border: 1px solid rgba(30, 230, 214, 0.24);
+        border-radius: 999px;
+        background: rgba(30, 230, 214, 0.08);
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .kicker::before {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 16px rgba(30, 230, 214, 0.9);
+        content: "";
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 14px;
+        font-size: 2.25rem;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin-top: 8px;
+        color: var(--soft);
+        font-size: 1.06rem;
+        font-weight: 650;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        margin-top: 18px;
+      }
+
+      .meter {
+        height: 9px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .meter span {
+        display: block;
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--amber));
+        transition: width 220ms ease;
+      }
+
+      .count {
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .composer {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: 1fr 48px;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel-strong);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .composer input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 7px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+      }
+
+      .composer input::placeholder {
+        color: rgba(238, 248, 247, 0.46);
+      }
+
+      .composer input:focus {
+        border-color: rgba(30, 230, 214, 0.65);
+        box-shadow: 0 0 0 3px rgba(30, 230, 214, 0.12);
+      }
+
+      .icon-button {
+        display: inline-grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.08);
+        cursor: pointer;
+        transition:
+          transform 160ms ease,
+          border-color 160ms ease,
+          background 160ms ease;
+      }
+
+      .icon-button:active {
+        transform: scale(0.96);
+      }
+
+      .icon-button svg {
+        width: 21px;
+        height: 21px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2.2;
+      }
+
+      .add-button {
+        border-color: rgba(30, 230, 214, 0.52);
+        background: linear-gradient(180deg, rgba(30, 230, 214, 0.94), rgba(17, 170, 160, 0.92));
+        color: #041112;
+      }
+
+      .add-button:disabled {
+        cursor: wait;
+        opacity: 0.62;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        margin: 14px 2px 10px;
+      }
+
+      .sync {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 650;
+      }
+
+      .sync-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--amber);
+        box-shadow: 0 0 14px rgba(232, 182, 92, 0.5);
+      }
+
+      .sync.online .sync-dot {
+        background: var(--accent);
+        box-shadow: 0 0 14px rgba(30, 230, 214, 0.66);
+      }
+
+      .share {
+        width: auto;
+        min-width: 48px;
+        padding: 0 12px;
+        color: var(--amber);
+      }
+
+      .tasks {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0 0 80px;
+        list-style: none;
+      }
+
+      .task {
+        display: grid;
+        grid-template-columns: 1fr 44px;
+        gap: 8px;
+        align-items: center;
+        min-height: 62px;
+        padding: 8px 8px 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+        backdrop-filter: blur(18px);
+      }
+
+      .task-label {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 10px;
+        align-items: center;
+        min-width: 0;
+        min-height: 46px;
+        cursor: pointer;
+      }
+
+      .task-label input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .box {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border: 2px solid rgba(238, 248, 247, 0.28);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.06);
+        transition:
+          background 180ms ease,
+          border-color 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .box svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: #041112;
+        stroke-dasharray: 28;
+        stroke-dashoffset: 28;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 3.2;
+        transition: stroke-dashoffset 180ms ease;
+      }
+
+      .task.is-complete .box {
+        border-color: var(--accent);
+        background: var(--accent);
+        box-shadow: 0 0 22px rgba(30, 230, 214, 0.32);
+      }
+
+      .task.is-complete .box svg {
+        stroke-dashoffset: 0;
+      }
+
+      .task-text {
+        min-width: 0;
+        color: var(--text);
+        font-size: 1rem;
+        line-height: 1.32;
+        overflow-wrap: anywhere;
+        text-decoration-line: none;
+        text-decoration-thickness: 2px;
+        text-decoration-color: var(--accent);
+        text-decoration-skip-ink: none;
+        transition:
+          color 160ms ease,
+          text-decoration-color 160ms ease;
+      }
+
+      .task.is-complete .task-text {
+        color: rgba(238, 248, 247, 0.55);
+        text-decoration-line: line-through;
+      }
+
+      .delete {
+        width: 44px;
+        height: 44px;
+        color: rgba(255, 122, 122, 0.92);
+      }
+
+      .delete:hover,
+      .delete:focus-visible {
+        border-color: rgba(255, 122, 122, 0.35);
+        background: rgba(255, 122, 122, 0.1);
+      }
+
+      .empty {
+        display: none;
+        padding: 22px 14px;
+        border: 1px dashed rgba(238, 248, 247, 0.18);
+        border-radius: var(--radius);
+        background: rgba(12, 20, 23, 0.54);
+        color: var(--muted);
+        text-align: center;
+        backdrop-filter: blur(12px);
+      }
+
+      .empty.is-visible {
+        display: block;
+      }
+
+      .toast {
+        position: fixed;
+        right: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
+        left: 16px;
+        z-index: 20;
+        display: none;
+        width: min(520px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 13px 14px;
+        border: 1px solid rgba(30, 230, 214, 0.28);
+        border-radius: var(--radius);
+        background: rgba(4, 15, 17, 0.94);
+        color: var(--text);
+        box-shadow: var(--shadow);
+      }
+
+      .toast.is-visible {
+        display: block;
+      }
+
+      @media (min-width: 720px) {
+        .app {
+          padding: 34px 24px 24px;
+        }
+
+        h1 {
+          font-size: 3rem;
+        }
+
+        .task {
+          grid-template-columns: 1fr 48px;
+          min-height: 66px;
+          padding: 10px 10px 10px 12px;
+        }
+
+        .task-text {
+          font-size: 1.04rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="kicker">Casa 10x10</div>
+        <h1>To-do list</h1>
+        <p class="subtitle">Checklist compartida para la obra</p>
+        <div class="stats" aria-label="Progreso">
+          <div class="meter" aria-hidden="true"><span id="meterFill"></span></div>
+          <div class="count" id="countText">0/0</div>
+        </div>
+      </header>
+
+      <form class="composer" id="addForm" autocomplete="off">
+        <input id="taskInput" name="task" maxlength="140" placeholder="Agregar nuevo check" />
+        <button class="icon-button add-button" id="addButton" type="submit" aria-label="Agregar tarea">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      </form>
+
+      <div class="toolbar">
+        <div class="sync" id="syncStatus" role="status" aria-live="polite">
+          <span class="sync-dot" aria-hidden="true"></span>
+          <span id="syncText">Cargando...</span>
+        </div>
+        <button class="icon-button share" id="shareButton" type="button" aria-label="Copiar link para compartir">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 12h8" />
+            <path d="M13 7l5 5-5 5" />
+            <path d="M18 12H7a4 4 0 0 0 0 8h2" />
+            <path d="M6 12h11a4 4 0 0 0 0-8h-2" />
+          </svg>
+        </button>
+      </div>
+
+      <main>
+        <ul class="tasks" id="taskList"></ul>
+        <div class="empty" id="emptyState">No hay tareas. Agrega el primer check.</div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const API_BASE_URL = "";
+      const DEFAULT_TASKS = [
+        "Pedir presupuesto final de mano de obra",
+        "Definir ubicacion de tomas y luces",
+        "Comprar canerias y accesorios sanitarios",
+        "Elegir aberturas para puerta y ventanas",
+        "Coordinar revoques interiores",
+        "Definir pisos y revestimientos",
+        "Revisar instalacion de cocina y bano"
+      ];
+
+      const state = {
+        apiBase: getApiBase(),
+        listId: getListId(),
+        tasks: [],
+        loading: false,
+        localMode: false,
+        events: null,
+        pollTimer: null
+      };
+
+      const els = {
+        form: document.querySelector("#addForm"),
+        input: document.querySelector("#taskInput"),
+        addButton: document.querySelector("#addButton"),
+        list: document.querySelector("#taskList"),
+        empty: document.querySelector("#emptyState"),
+        meter: document.querySelector("#meterFill"),
+        count: document.querySelector("#countText"),
+        sync: document.querySelector("#syncStatus"),
+        syncText: document.querySelector("#syncText"),
+        share: document.querySelector("#shareButton"),
+        toast: document.querySelector("#toast")
+      };
+
+      boot();
+
+      function boot() {
+        els.form.addEventListener("submit", addTask);
+        els.share.addEventListener("click", copyShareLink);
+        loadTasks();
+        startRealtime();
+      }
+
+      function getApiBase() {
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl = params.get("api");
+        if (fromUrl) {
+          return normalizeApiBase(fromUrl);
+        }
+
+        const fromGlobal = window.CASA_10X10_API_URL || API_BASE_URL;
+        return normalizeApiBase(fromGlobal);
+      }
+
+      function normalizeApiBase(value) {
+        const clean = String(value || "").trim().replace(/\/+$/, "");
+        if (!clean) return "";
+        try {
+          const url = new URL(clean);
+          const localHost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+          if (url.protocol !== "https:" && !localHost) return "";
+          return url.toString().replace(/\/+$/, "");
+        } catch {
+          return "";
+        }
+      }
+
+      function getListId() {
+        const current = decodeURIComponent(window.location.hash.replace(/^#/, "")).trim();
+        if (/^[a-zA-Z0-9_-]{4,72}$/.test(current)) return current;
+
+        const next = `casa-10x10-${Math.random().toString(36).slice(2, 10)}`;
+        try {
+          history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${next}`);
+        } catch {
+          window.location.hash = next;
+        }
+        return next;
+      }
+
+      async function loadTasks(options = {}) {
+        if (state.loading && !options.force) return;
+        state.loading = true;
+
+        try {
+          if (!state.apiBase) {
+            state.localMode = true;
+            state.tasks = loadLocalTasks();
+            setSync("Modo local. Agrega ?api=URL_RENDER para compartir.", false);
+          } else {
+            state.localMode = false;
+            const data = await request(`/api/tasks?listId=${encodeURIComponent(state.listId)}`);
+            state.tasks = data.tasks || [];
+            setSync("Sincronizado", true);
+          }
+          render();
+        } catch (error) {
+          console.error(error);
+          setSync("Sin conexion. Reintentando...", false);
+          if (!state.tasks.length) {
+            state.tasks = loadLocalTasks();
+            render();
+          }
+        } finally {
+          state.loading = false;
+        }
+      }
+
+      function startRealtime() {
+        if (!state.apiBase) return;
+
+        const eventsUrl = `${state.apiBase}/api/events?listId=${encodeURIComponent(state.listId)}`;
+        state.events = new EventSource(eventsUrl);
+
+        state.events.addEventListener("open", () => setSync("Conectado en vivo", true));
+        state.events.addEventListener("changed", () => loadTasks({ force: true }));
+        state.events.addEventListener("error", () => setSync("Reconectando...", false));
+
+        state.pollTimer = window.setInterval(() => loadTasks({ force: true }), 20000);
+      }
+
+      async function addTask(event) {
+        event.preventDefault();
+        const text = els.input.value.trim();
+        if (!text) return;
+
+        els.addButton.disabled = true;
+        try {
+          if (state.localMode) {
+            state.tasks.push({
+              id: crypto.randomUUID(),
+              text,
+              completed: false,
+              position: state.tasks.length
+            });
+            saveLocalTasks();
+            render();
+          } else {
+            const data = await request("/api/tasks", {
+              method: "POST",
+              body: JSON.stringify({ listId: state.listId, text })
+            });
+            state.tasks.push(data.task);
+            render();
+          }
+          els.input.value = "";
+          els.input.focus();
+        } catch (error) {
+          console.error(error);
+          showToast("No se pudo agregar. Revisa la conexion.");
+        } finally {
+          els.addButton.disabled = false;
+        }
+      }
+
+      async function toggleTask(id) {
+        const task = state.tasks.find((item) => item.id === id);
+        if (!task) return;
+
+        const previous = task.completed;
+        task.completed = !previous;
+        render();
+
+        try {
+          if (state.localMode) {
+            saveLocalTasks();
+          } else {
+            await request(`/api/tasks/${encodeURIComponent(id)}`, {
+              method: "PATCH",
+              body: JSON.stringify({ listId: state.listId, completed: task.completed })
+            });
+          }
+        } catch (error) {
+          console.error(error);
+          task.completed = previous;
+          render();
+          showToast("No se pudo actualizar. Reintentarlo en unos segundos.");
+        }
+      }
+
+      async function deleteTask(id) {
+        const previous = [...state.tasks];
+        state.tasks = state.tasks.filter((item) => item.id !== id);
+        render();
+
+        try {
+          if (state.localMode) {
+            saveLocalTasks();
+          } else {
+            await request(`/api/tasks/${encodeURIComponent(id)}?listId=${encodeURIComponent(state.listId)}`, {
+              method: "DELETE"
+            });
+          }
+        } catch (error) {
+          console.error(error);
+          state.tasks = previous;
+          render();
+          showToast("No se pudo eliminar. Revisa la conexion.");
+        }
+      }
+
+      async function request(path, options = {}) {
+        const response = await fetch(`${state.apiBase}${path}`, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+          }
+        });
+
+        if (!response.ok) {
+          const message = await response.text();
+          throw new Error(message || `HTTP ${response.status}`);
+        }
+
+        if (response.status === 204) return null;
+        return response.json();
+      }
+
+      function render() {
+        els.list.textContent = "";
+        const done = state.tasks.filter((task) => task.completed).length;
+        const total = state.tasks.length;
+        const percent = total ? Math.round((done / total) * 100) : 0;
+
+        els.count.textContent = `${done}/${total}`;
+        els.meter.style.width = `${percent}%`;
+        els.empty.classList.toggle("is-visible", total === 0);
+
+        const fragment = document.createDocumentFragment();
+        for (const task of state.tasks) {
+          fragment.appendChild(renderTask(task));
+        }
+        els.list.appendChild(fragment);
+      }
+
+      function renderTask(task) {
+        const li = document.createElement("li");
+        li.className = `task${task.completed ? " is-complete" : ""}`;
+
+        const label = document.createElement("label");
+        label.className = "task-label";
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = task.completed;
+        input.addEventListener("change", () => toggleTask(task.id));
+
+        const box = document.createElement("span");
+        box.className = "box";
+        box.setAttribute("aria-hidden", "true");
+        box.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg>';
+
+        const text = document.createElement("span");
+        text.className = "task-text";
+        text.textContent = task.text;
+
+        label.append(input, box, text);
+
+        const del = document.createElement("button");
+        del.className = "icon-button delete";
+        del.type = "button";
+        del.setAttribute("aria-label", `Eliminar ${task.text}`);
+        del.innerHTML =
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M7 6l1 14h8l1-14" /><path d="M10 11v5" /><path d="M14 11v5" /></svg>';
+        del.addEventListener("click", () => deleteTask(task.id));
+
+        li.append(label, del);
+        return li;
+      }
+
+      function localKey() {
+        return `casa10x10.tasks.${state.listId}`;
+      }
+
+      function loadLocalTasks() {
+        const saved = localStorage.getItem(localKey());
+        if (saved) {
+          try {
+            return JSON.parse(saved);
+          } catch {
+            localStorage.removeItem(localKey());
+          }
+        }
+
+        const seeded = DEFAULT_TASKS.map((text, position) => ({
+          id: crypto.randomUUID(),
+          text,
+          completed: false,
+          position
+        }));
+        localStorage.setItem(localKey(), JSON.stringify(seeded));
+        return seeded;
+      }
+
+      function saveLocalTasks() {
+        localStorage.setItem(localKey(), JSON.stringify(state.tasks));
+        setSync("Guardado en este dispositivo", false);
+      }
+
+      async function copyShareLink() {
+        const url = window.location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          showToast(state.localMode ? "Link copiado. Falta configurar backend para compartir checks." : "Link copiado.");
+        } catch {
+          showToast(url);
+        }
+      }
+
+      function setSync(text, online) {
+        els.syncText.textContent = text;
+        els.sync.classList.toggle("online", Boolean(online));
+      }
+
+      function showToast(text) {
+        els.toast.textContent = text;
+        els.toast.classList.add("is-visible");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => els.toast.classList.remove("is-visible"), 2600);
+      }
+    </script>
+  </body>
+</html>
