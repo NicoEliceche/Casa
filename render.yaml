@@ -10,4 +10,4 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: CORS_ORIGIN
-        value: "*"
+        value: "https://nicoeliceche.github.io"

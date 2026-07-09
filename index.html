@@ -496,7 +496,8 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
-      const API_BASE_URL = "";
+      const API_BASE_URL = "https://casa-10x10-api.onrender.com";
+      const DEFAULT_LIST_ID = "casa-10x10-familia";
       const DEFAULT_TASKS = [
         "Pedir presupuesto final de mano de obra",
         "Definir ubicacion de tomas y luces",
@@ -568,7 +569,7 @@
         const current = decodeURIComponent(window.location.hash.replace(/^#/, "")).trim();
         if (/^[a-zA-Z0-9_-]{4,72}$/.test(current)) return current;
 
-        const next = `casa-10x10-${Math.random().toString(36).slice(2, 10)}`;
+        const next = DEFAULT_LIST_ID;
         try {
           history.replaceState(null, "", `${window.location.pathname}${window.location.search}#${next}`);
         } catch {

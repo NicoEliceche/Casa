@@ -10,20 +10,31 @@ Abri `index.html` directamente en el navegador. Sin backend queda en modo local 
 
 1. Crea una base en Neon y copia el connection string con `sslmode=require`.
 2. Sube este repo a GitHub.
-3. En Render, crea un Web Service desde el repo.
+3. En Render, crea un Web Service desde el repo. El dominio esperado por el frontend es:
+
+```text
+https://casa-10x10-api.onrender.com
+```
+
+Si Render te da otro dominio, cambia `API_BASE_URL` en `index.html`.
+
 4. Usa:
    - Build command: `npm install`
    - Start command: `npm start`
-   - Environment: `DATABASE_URL=...`
-   - Environment: `CORS_ORIGIN=*`
+   - Environment: `DATABASE_URL=postgresql://...neon.tech/...?...sslmode=require...`
+   - Environment: `CORS_ORIGIN=https://nicoeliceche.github.io`
 5. En GitHub Pages, publica la rama `main` desde la raiz del repo.
-6. Abri la URL de Pages agregando el backend:
+6. Abri la URL de Pages:
 
 ```text
-https://TU_USUARIO.github.io/TU_REPO/?api=https://TU-SERVICIO.onrender.com
+https://nicoeliceche.github.io/Casa/
 ```
 
-La app genera automaticamente un `#casa-10x10-...` al final. Ese link completo, con `?api=...` y `#...`, es el que hay que compartir.
+La URL base usa la lista compartida `casa-10x10-familia`. Si queres crear otra lista, podes abrir:
+
+```text
+https://nicoeliceche.github.io/Casa/#otro-id-compartido
+```
 
 ## Notas
 
